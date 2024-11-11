@@ -7,22 +7,27 @@ export default async function handler(req, res) {
 
   try {
     console.log('Starting request to Lambda');
-    console.log('Request body:', req.body);
+    
+    // Extract from req.body.prompt if it exists, otherwise use req.body
+    const requestBody = req.body.prompt || req.body;
+    console.log('Request body:', requestBody);
 
-    // First let's try a regular fetch to see if that works
     const response = await fetch('https://icvjf7t3purdrch3xk5nf2ex4e0dhaci.lambda-url.us-west-2.on.aws/chat', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(req.body),
+      body: JSON.stringify({
+        email: requestBody.email,
+        message: requestBody.message
+      })
     });
 
     console.log('Lambda response status:', response.status);
     const text = await response.text();
     console.log('Lambda response:', text);
 
-    return res.status(200).json({ message: 'Check logs' });
+    return res.status(200).json({ message: text });
 
   } catch (error) {
     console.error('Detailed error:', error);
