@@ -1,41 +1,27 @@
-import { useState } from 'react'
+import { useState } from 'react';
+import { useCompletion } from 'ai/react';
 
 export default function Home() {
-  const [response, setResponse] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
+  const [response, setResponse] = useState('');
+
+  const { complete, isLoading } = useCompletion({
+    api: '/api/chat',
+    onFinish: (prompt, completion) => {
+      console.log('Finished!', completion);
+    },
+  });
 
   const handleClick = async () => {
-    setIsLoading(true)
-    setResponse('')
-
-    try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: "connortest1110644@gmail.com",
-          message: "How many boxes of protein are in an in n out double double"
-        }),
-      })
-
-      const reader = response.body.getReader()
-      const decoder = new TextDecoder()
-
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-
-        const text = decoder.decode(value)
-        setResponse((prev) => prev + text)
-      }
-    } catch (error) {
-      console.error('Error:', error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
+    setResponse('');
+    const completion = await complete({
+      email: "connortest1110644@gmail.com",
+      message: "How many boxes of protein are in an in n out double double"
+    }, {
+      onStreamingChunk: (chunk) => {
+        setResponse(prev => prev + chunk);
+      },
+    });
+  };
 
   return (
     <div style={{ padding: '20px' }}>
