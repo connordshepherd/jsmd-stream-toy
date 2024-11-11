@@ -6,25 +6,30 @@ export default async function handler(req, res) {
   }
 
   try {
-    const result = await streamText({
-      url: 'https://icvjf7t3purdrch3xk5nf2ex4e0dhaci.lambda-url.us-west-2.on.aws/chat',
-      body: JSON.stringify(req.body),
+    console.log('Starting request to Lambda');
+    console.log('Request body:', req.body);
+
+    // First let's try a regular fetch to see if that works
+    const response = await fetch('https://icvjf7t3purdrch3xk5nf2ex4e0dhaci.lambda-url.us-west-2.on.aws/chat', {
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
+      body: JSON.stringify(req.body),
     });
 
-    const reader = result.textStream.getReader();
+    console.log('Lambda response status:', response.status);
+    const text = await response.text();
+    console.log('Lambda response:', text);
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      res.write(value);
-    }
+    return res.status(200).json({ message: 'Check logs' });
 
-    res.end();
   } catch (error) {
-    console.error('Error:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error('Detailed error:', error);
+    return res.status(500).json({ 
+      message: 'Internal server error',
+      error: error.message,
+      stack: error.stack
+    });
   }
 }
